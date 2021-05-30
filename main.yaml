@@ -1,0 +1,40 @@
+---
+- name: Quiz2
+  hosts: target
+  vars:
+    password: AnsibleManaged
+
+  tasks:
+  - name: Change motd in /etc/motd
+    lineinfile:
+      path: '/etc/motd'
+      line: 'Ansible Managed by 1511507'
+      state: present
+
+  - name: Create a user
+    user:
+      name: cabelinde-tip
+      password: "{{ password | password_hash('sha512') }}"
+      state: present
+
+  - name: Make the user a passwordless sudoer user
+    lineinfile:
+      path: /etc/sudoers
+      insertafter: '^includedir /etc/suoders.d'
+      line: 'cabelinde-tip ALL=(ALL) NOPASSWD: ALL'
+
+  - name: Create a group
+    group:
+      name: sysad2
+      state: present
+
+  - name: Add EPEL repository
+    ansible.builtin.dnf:
+      name: epel-release
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: Install htop package
+    ansible.builtin.dnf:
+      name: htop
+      state: latest
